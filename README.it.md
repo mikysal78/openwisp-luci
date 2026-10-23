@@ -7,6 +7,8 @@ web del router in una nuova scheda, attraverso un proxy nginx sul server
 OpenWISP. Il router non deve essere raggiungibile dal tuo browser, solo dal
 server (LAN, mesh, VPN, ZeroTier...).
 
+![Il pulsante LuCI ↗ nella barra delle schede della pagina del device](docs/luci-tab.png)
+
 ```
 browser ──https──▶ <uuid del device>.luci.example.com (nginx sul server OpenWISP)
                      │ auth_request ──▶ Django: cookie valido? quale router?
