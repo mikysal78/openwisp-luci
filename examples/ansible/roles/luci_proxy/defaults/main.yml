@@ -1,0 +1,18 @@
+---
+# nginx virtual host of openwisp-luci: one host per device,
+# <device uuid without dashes>.<luci_proxy_domain>
+
+# Parent domain of the device hosts: needs a DNS wildcard
+# *.<luci_proxy_domain> and a certificate that covers it
+luci_proxy_domain: luci.example.com
+luci_proxy_ssl_cert: "{{ openwisp2_ssl_cert }}"
+luci_proxy_ssl_key: "{{ openwisp2_ssl_key }}"
+# uWSGI socket of OpenWISP (ansible-openwisp2 role)
+luci_proxy_uwsgi_socket: "unix://{{ openwisp2_path }}/uwsgi.sock"
+# The routers answer in HTTPS with their self-signed certificate (uhttpd):
+# the traffic, router password included, stays encrypted up to the router.
+# "http" only if the path between server and routers is trusted.
+luci_proxy_router_scheme: https
+# Firmware upload from LuCI (sysupgrade)
+luci_proxy_max_body_size: 64m
+luci_proxy_ipv6: true

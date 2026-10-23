@@ -1,0 +1,47 @@
+# Traduzione italiana di openwisp-luci.
+# This file is distributed under the same license as the openwisp-luci package.
+# Michele Salerno, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: openwisp-luci\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-10-23 08:40+0200\n"
+"PO-Revision-Date: 2026-10-23 09:30+0200\n"
+"Last-Translator: Michele Salerno\n"
+"Language-Team: Italian\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: admin.py:72 admin.py:84
+msgid "LuCI: the management IP of this device is missing or not allowed"
+msgstr "LuCI: l'IP di gestione di questo device manca o non è ammesso"
+
+#: apps.py:8
+msgid "LuCI"
+msgstr "LuCI"
+
+#: templates/admin/openwisp_luci/device/change_form.html:9
+msgid "Open the LuCI web interface of the router in a new tab"
+msgstr "Apre l'interfaccia web LuCI del router in una nuova scheda"
+
+#: templates/openwisp_luci/denied.html:18
+msgid ""
+"Open LuCI again with the LuCI button on the device page in OpenWISP. The "
+"link is valid only once, for a short time, and only for users who can change "
+"the device."
+msgstr ""
+"Riapri LuCI con il pulsante LuCI nella pagina del device in OpenWISP. Il "
+"link vale una sola volta, per poco tempo, e solo per chi può modificare il "
+"device."
+
+#: templates/openwisp_luci/denied.html:19
+msgid "Go to the device in OpenWISP"
+msgstr "Vai al device in OpenWISP"
+
+#: views.py:115
+msgid "LuCI session missing or expired"
+msgstr "Sessione LuCI assente o scaduta"

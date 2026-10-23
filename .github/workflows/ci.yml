@@ -1,0 +1,120 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install ruff
+      - name: Ruff
+        run: |
+          ruff check .
+          ruff format --check .
+      - name: Italian translation (.po valid and .mo up to date)
+        run: |
+          sudo apt-get install -y -qq gettext
+          cd openwisp_luci/locale/it/LC_MESSAGES
+          msgfmt -c -o /tmp/django.mo django.po
+          cmp /tmp/django.mo django.mo
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install pytest "django~=5.2.0"
+      - name: Tests
+        run: pytest -v
+
+  nginx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install jinja2
+      - run: sudo apt-get install -y -qq nginx
+      - name: Example virtual host is valid
+        run: |
+          python ci/nginx_check.py /tmp/luci-nginx
+          mkdir -p /tmp/luci-nginx/tmp
+          nginx -t -p /tmp/luci-nginx -c /tmp/luci-nginx/nginx.conf
+      - name: The router never receives the proxy cookie
+        run: |
+          nginx -p /tmp/luci-nginx -c /tmp/luci-nginx/nginx.conf
+          sh ci/nginx_cookie_test.sh
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install pip-audit .
+      # The package has no dependencies of its own besides openwisp-controller:
+      # vulnerabilities in the OpenWISP stack are reported in the job summary
+      # (and by Dependabot) without failing CI, since they are fixed by
+      # upgrading OpenWISP, not this package.
+      - name: Known vulnerabilities in the OpenWISP stack (report)
+        run: |
+          {
+            echo "## pip-audit (OpenWISP stack)"
+            echo '```'
+            pip-audit --progress-spinner off 2>&1 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if ! pip-audit --progress-spinner off >/dev/null 2>&1; then
+            echo "::warning::pip-audit found known vulnerabilities in the OpenWISP stack: see the job summary"
+          fi
+
+  example:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install ansible ansible-lint
+      - run: ansible-galaxy role install openwisp.openwisp2
+      - name: Playbook syntax
+        working-directory: examples/ansible
+        run: |
+          printf '[openwisp2]\nlocalhost\n' > /tmp/hosts
+          ansible-playbook --syntax-check -i /tmp/hosts playbook.yml
+      - name: ansible-lint
+        working-directory: examples/ansible
+        run: ansible-lint playbook.yml
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install build
+      - run: python -m build
+      - name: Wheel contents
+        run: python ci/check_wheel.py dist/*.whl
+      - uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/

@@ -1,0 +1,4 @@
+---
+- name: Reload nginx for openwisp-luci
+  ansible.builtin.shell: nginx -t && systemctl reload nginx
+  changed_when: true

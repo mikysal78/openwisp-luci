@@ -1,0 +1,36 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - run: pip install build pytest "django~=5.2.0"
+      - name: Tag matches the package version
+        run: |
+          version=$(python -c "import openwisp_luci as m; print(m.__version__)")
+          test "v$version" = "$GITHUB_REF_NAME" || { echo "tag $GITHUB_REF_NAME != version $version"; exit 1; }
+      - name: Tests
+        run: pytest -q
+      - run: python -m build
+      - name: Wheel contents
+        run: python ci/check_wheel.py dist/*.whl
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS
+      - name: GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --title "openwisp-luci $GITHUB_REF_NAME" \
+            --notes "Install: pip install https://github.com/$GITHUB_REPOSITORY/releases/download/$GITHUB_REF_NAME/$(cd dist && ls *.whl)"

@@ -1,0 +1,22 @@
+{% load i18n %}<!doctype html>
+<html lang="{{ LANGUAGE_CODE|default:'en' }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{{ title }}</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;padding:3rem 1rem;background:#f4f4f4;color:#222}
+main{max-width:34rem;margin:auto;background:#fff;padding:2rem;border-radius:6px}
+h1{font-size:1.3rem;margin-top:0}
+@media (prefers-color-scheme:dark){body{background:#1b1b1b;color:#ddd}main{background:#262626}a{color:#8ab4f8}}
+</style>
+</head>
+<body>
+<main>
+<h1>{{ title }}</h1>
+<p>{% trans "Open LuCI again with the LuCI button on the device page in OpenWISP. The link is valid only once, for a short time, and only for users who can change the device." %}</p>
+{% if device_url %}<p><a href="{{ device_url }}">{% trans "Go to the device in OpenWISP" %}</a></p>{% endif %}
+</main>
+</body>
+</html>

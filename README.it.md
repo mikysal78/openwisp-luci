@@ -1,0 +1,127 @@
+# openwisp-luci
+
+[🇬🇧 English](README.md) · 🇮🇹 Italiano
+
+Un pulsante **LuCI** nella pagina del device in OpenWISP: apre l'interfaccia
+web del router in una nuova scheda, attraverso un proxy nginx sul server
+OpenWISP. Il router non deve essere raggiungibile dal tuo browser, solo dal
+server (LAN, mesh, VPN, ZeroTier...).
+
+```
+browser ──https──▶ <uuid del device>.luci.example.com (nginx sul server OpenWISP)
+                     │ auth_request ──▶ Django: cookie valido? quale router?
+                     └──https──▶ IP di gestione del router (uhttpd, LuCI)
+```
+
+- **Un host per router** (`<uuid del device senza trattini>.luci.example.com`):
+  ogni router è un'origine separata, quindi i cookie e il JavaScript di un
+  router non vedono mai quelli degli altri.
+- **Link monouso**: il pulsante dà un token firmato, valido 60 secondi e
+  utilizzabile una sola volta, legato all'utente, al device e alla password
+  dell'utente.
+- **Ogni richiesta è controllata**: l'utente deve essere ancora attivo e avere
+  il permesso di modificare il device, la password non deve essere cambiata, il
+  device deve esistere ancora e il suo IP di gestione deve stare nelle reti
+  ammesse.
+- Il login del router resta: il proxy decide solo *chi può raggiungere* LuCI,
+  il router resta protetto dalla sua password.
+
+Requisiti: OpenWISP con openwisp-controller ≥ 1.1, nginx con il modulo
+`auth_request` (incluso nei pacchetti Debian e Ubuntu), un DNS wildcard e un
+certificato per `*.luci.example.com`.
+
+## Installazione
+
+1. **DNS**: un record wildcard che punta al server OpenWISP, per esempio
+   `*.luci.example.com. CNAME openwisp.example.com.`
+2. **Certificato** per `*.luci.example.com` (un certificato `*.example.com` non
+   lo copre). Con acme.sh e DNS-01:
+   `acme.sh --issue --dns dns_nsupdate -d luci.example.com -d '*.luci.example.com'`
+3. **OpenWISP**, con il ruolo [ansible-openwisp2](https://github.com/openwisp/ansible-openwisp2)
+   (esempio completo in [`examples/ansible`](examples/ansible)):
+
+   ```yaml
+   openwisp2_extra_python_packages:
+     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.1.0/openwisp_luci-0.1.0-py3-none-any.whl"
+   # dopo le app che registrano o estendono l'admin del device
+   # (openwisp-monitoring, openwisp-netconsole...)
+   openwisp2_extra_django_apps:
+     - openwisp_luci
+   openwisp2_extra_urls:
+     - 'path("__openwisp_luci__/", include("openwisp_luci.urls"))'
+   openwisp2_extra_django_settings_instructions:
+     - |
+       OPENWISP_LUCI_HOST = "{id}.luci.example.com"
+       OPENWISP_LUCI_OPENWISP_URL = "https://openwisp.example.com"
+       ALLOWED_HOSTS.append(".luci.example.com")
+   ```
+
+   e il ruolo `luci_proxy` dell'esempio per il virtual host di nginx.
+4. **Router**: uhttpd deve rispondere sull'IP di gestione dal server, in HTTPS
+   (il default di OpenWrt con `luci-ssl` o `uhttpd` + `px5g`). Se l'interfaccia
+   di gestione sta in una zona firewall con `input REJECT` (per esempio `wan`),
+   apri TCP 443 solo dal server:
+
+   ```json
+   {"config_name": "rule", "config_value": "allow_luci_openwisp", "name": "Allow-LuCI-OpenWISP",
+    "src": "wan", "src_ip": "192.0.2.10", "proto": "tcp", "dest_port": "443", "target": "ACCEPT"}
+   ```
+
+## Impostazioni
+
+| Impostazione | Default | Significato |
+|---|---|---|
+| `OPENWISP_LUCI_HOST` | `None` | Host del proxy, `{id}` diventa l'UUID del device senza trattini. `None` nasconde il pulsante. |
+| `OPENWISP_LUCI_ALLOWED_NETWORKS` | IPv4 privati + `fc00::/7` | Reti in cui può stare l'IP di gestione. Restringila alla tua rete (es. `["10.27.0.0/16"]`). |
+| `OPENWISP_LUCI_TOKEN_AGE` | `60` | Secondi di validità del link monouso. |
+| `OPENWISP_LUCI_SESSION_AGE` | `14400` | Secondi di validità del cookie del proxy; poi si riusa il pulsante. |
+| `OPENWISP_LUCI_SUPERUSER_ONLY` | `False` | Solo i superuser vedono e usano il pulsante. |
+| `OPENWISP_LUCI_OPENWISP_URL` | `None` | Indirizzo di OpenWISP, per il link nella pagina «accesso negato». |
+
+Ogni apertura finisce nel log (logger `openwisp_luci`, livello INFO) con
+utente, device e IP del router.
+
+## Sicurezza
+
+- **Chi**: utenti staff con il permesso `change_device` che gestiscono
+  l'organizzazione del device, oppure i superuser. Il pulsante e le viste lo
+  ricontrollano a ogni richiesta.
+- **Dove**: l'IP di gestione lo dichiara il router stesso, quindi un router
+  compromesso potrebbe farlo puntare ovunque. Il proxy rifiuta indirizzi di
+  loopback, link-local, multicast e riservati, e ogni indirizzo fuori da
+  `OPENWISP_LUCI_ALLOWED_NETWORKS`. Schema e porta sono fissi in nginx.
+- **Cookie**: `__Host-openwisp-luci`, firmato, `Secure`, `HttpOnly`,
+  `SameSite=Strict`, valido solo sull'host del suo device. nginx lo toglie
+  prima di inoltrare la richiesta, quindi il router non lo riceve mai.
+- **Token nell'URL**: monouso, 60 secondi, non scritto nell'access log di
+  nginx, `Referrer-Policy: no-referrer`.
+- **Traffico verso il router**: resta cifrato fino al router (HTTPS). Il
+  certificato del router è autofirmato e non viene verificato.
+- **Stesso sito**: le pagine dei router sono servite su un sottodominio dello
+  stesso dominio di OpenWISP. Django rifiuta i POST da altre origini
+  controllando l'header `Origin`, ma un sottodominio può impostare cookie per
+  il dominio padre. Dai al cookie di sessione di OpenWISP il prefisso
+  `__Host-`, che i sottodomini non possono impostare né sovrascrivere:
+
+  ```python
+  SESSION_COOKIE_NAME = "__Host-sessionid"  # una volta fa uscire tutti
+  ```
+
+  Se puoi, usa per il proxy un dominio separato (es. `{id}.luci.example.net`).
+
+Segnala le vulnerabilità in privato: vedi [SECURITY.md](SECURITY.md).
+
+## Sviluppo
+
+```sh
+pip install pytest "django~=5.2.0" ruff
+pytest
+ruff check . && ruff format --check .
+```
+
+La CI valida anche il virtual host nginx dell'esempio e controlla che il
+router non riceva mai il cookie del proxy.
+
+## Licenza
+
+GPL-3.0-or-later.

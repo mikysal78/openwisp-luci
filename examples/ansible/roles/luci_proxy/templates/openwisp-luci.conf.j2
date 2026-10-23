@@ -1,0 +1,92 @@
+# {{ ansible_managed }}
+# openwisp-luci: LuCI of each router through OpenWISP.
+# Host <device uuid without dashes>.{{ luci_proxy_domain }}: one origin per
+# router, so cookies and JavaScript of a router never see the other ones.
+
+upstream openwisp-luci-django {
+    server {{ luci_proxy_uwsgi_socket }};
+}
+
+# The router must not receive the proxy cookie
+map $http_cookie $openwisp_luci_router_cookie {
+    default $http_cookie;
+    "~^__Host-openwisp-luci=[^;]*(?:;\s*)?(?<luci_rest>.*)$" "$luci_rest";
+    "~^(?<luci_before>.*?);\s*__Host-openwisp-luci=[^;]*(?<luci_after>.*)$" "$luci_before$luci_after";
+}
+
+server {
+    listen 443 ssl;
+{% if luci_proxy_ipv6 %}
+    listen [::]:443 ssl;
+{% endif %}
+    server_name "~^[0-9a-f]{32}\.{{ luci_proxy_domain | regex_escape }}$";
+
+    ssl_certificate {{ luci_proxy_ssl_cert }};
+    ssl_certificate_key {{ luci_proxy_ssl_key }};
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:OpenWISPLuCI:10m;
+
+    access_log /var/log/nginx/openwisp-luci.access.log;
+    error_log /var/log/nginx/openwisp-luci.error.log error;
+
+    client_max_body_size {{ luci_proxy_max_body_size }};
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Robots-Tag "noindex, nofollow" always;
+
+    # Single-use link from OpenWISP and access denied page. No access log:
+    # the login URL carries the token.
+    location ^~ /__openwisp_luci__/ {
+        access_log off;
+        uwsgi_pass openwisp-luci-django;
+        include uwsgi_params;
+        uwsgi_param HTTP_X_FORWARDED_PROTO https;
+    }
+
+    # Asked by auth_request for every request to the router: only the
+    # cookie and the host go to Django, never the body or the other headers
+    location = /__openwisp_luci__/auth/ {
+        internal;
+        uwsgi_pass openwisp-luci-django;
+        uwsgi_pass_request_headers off;
+        uwsgi_pass_request_body off;
+        uwsgi_param REQUEST_METHOD GET;
+        uwsgi_param REQUEST_URI /__openwisp_luci__/auth/;
+        uwsgi_param PATH_INFO /__openwisp_luci__/auth/;
+        uwsgi_param QUERY_STRING "";
+        uwsgi_param CONTENT_TYPE "";
+        uwsgi_param CONTENT_LENGTH "";
+        uwsgi_param SERVER_PROTOCOL $server_protocol;
+        uwsgi_param REQUEST_SCHEME https;
+        uwsgi_param HTTPS on;
+        uwsgi_param SERVER_NAME $host;
+        uwsgi_param SERVER_PORT $server_port;
+        uwsgi_param REMOTE_ADDR $remote_addr;
+        uwsgi_param HTTP_HOST $host;
+        uwsgi_param HTTP_COOKIE $http_cookie;
+        uwsgi_param HTTP_X_FORWARDED_PROTO https;
+    }
+
+    location / {
+        auth_request /__openwisp_luci__/auth/;
+        auth_request_set $openwisp_luci_upstream $upstream_http_x_openwisp_luci_upstream;
+        error_page 401 = /__openwisp_luci__/denied/;
+
+        proxy_pass {{ luci_proxy_router_scheme }}://$openwisp_luci_upstream;
+        proxy_set_header Host $openwisp_luci_upstream;
+        proxy_set_header Cookie $openwisp_luci_router_cookie;
+        proxy_set_header X-Forwarded-For "";
+        proxy_ssl_verify off;
+        proxy_ssl_server_name off;
+        # absolute redirects of the router to its own address
+        proxy_redirect ~^https?://[^/]+(/.*)$ $1;
+        proxy_cookie_flags ~ secure samesite=strict;
+        proxy_request_buffering off;
+        proxy_connect_timeout 10s;
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+}

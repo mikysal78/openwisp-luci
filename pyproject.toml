@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openwisp-luci"
+dynamic = ["version"]
+description = "LuCI button on the OpenWISP device page: the router web interface through an authenticated nginx proxy"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+authors = [{ name = "Michele Salerno" }]
+requires-python = ">=3.10"
+dependencies = ["openwisp-controller>=1.1"]
+classifiers = [
+    "Framework :: Django",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+]
+
+[project.urls]
+Homepage = "https://github.com/mikysal78/openwisp-luci"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["openwisp_luci*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "openwisp_luci.__version__" }
+
+[tool.setuptools.package-data]
+openwisp_luci = [
+    "templates/admin/openwisp_luci/device/*.html",
+    "templates/openwisp_luci/*.html",
+    "locale/*/LC_MESSAGES/*",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 110
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]

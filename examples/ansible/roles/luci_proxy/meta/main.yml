@@ -1,0 +1,13 @@
+---
+galaxy_info:
+  role_name: luci_proxy
+  author: Michele Salerno
+  description: nginx virtual host of openwisp-luci (LuCI of the routers through OpenWISP)
+  license: GPL-3.0-or-later
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions: [all]
+    - name: Ubuntu
+      versions: [all]
+dependencies: []

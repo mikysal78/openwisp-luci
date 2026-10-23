@@ -1,0 +1,23 @@
+---
+- name: Check the proxy domain
+  ansible.builtin.assert:
+    that:
+      - luci_proxy_domain is match('^[a-z0-9]([a-z0-9.-]*[a-z0-9])?$')
+      - luci_proxy_router_scheme in ['https', 'http']
+    fail_msg: luci_proxy_domain must be a plain domain name, luci_proxy_router_scheme https or http
+
+- name: nginx virtual host of openwisp-luci
+  ansible.builtin.template:
+    src: openwisp-luci.conf.j2
+    dest: /etc/nginx/sites-available/openwisp-luci
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Reload nginx for openwisp-luci
+
+- name: Enable the virtual host
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/openwisp-luci
+    dest: /etc/nginx/sites-enabled/openwisp-luci
+    state: link
+  notify: Reload nginx for openwisp-luci

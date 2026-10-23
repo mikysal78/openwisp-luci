@@ -1,0 +1,32 @@
+---
+# Basic example: OpenWISP with openwisp-luci.
+#
+#   ansible-galaxy role install openwisp.openwisp2
+#   ansible-playbook -i hosts playbook.yml
+#
+# luci_proxy (roles/ next to this file) adds the nginx virtual host that
+# proxies LuCI. Before running it: a DNS wildcard *.luci.example.com pointing
+# to the OpenWISP server and a certificate that covers it. All the role
+# variables are in roles/luci_proxy/defaults/main.yml.
+
+- name: OpenWISP with openwisp-luci
+  hosts: openwisp2
+  become: true
+  roles:
+    - openwisp.openwisp2
+    - luci_proxy
+  vars:
+    luci_proxy_domain: luci.example.com
+    openwisp2_extra_python_packages:
+      - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.1.0/openwisp_luci-0.1.0-py3-none-any.whl"
+    # after the apps that register or extend the device admin
+    openwisp2_extra_django_apps:
+      - openwisp_luci
+    openwisp2_extra_urls:
+      - 'path("__openwisp_luci__/", include("openwisp_luci.urls"))'
+    openwisp2_extra_django_settings_instructions:
+      - |
+        OPENWISP_LUCI_HOST = "{id}.luci.example.com"
+        OPENWISP_LUCI_OPENWISP_URL = "https://{{ inventory_hostname }}"
+        # the views of the proxy answer on the proxy hosts
+        ALLOWED_HOSTS.append(".luci.example.com")
