@@ -10,6 +10,7 @@ REQUIRED = [
     "openwisp_luci/locale/it/LC_MESSAGES/django.mo",
     "openwisp_luci/templates/admin/openwisp_luci/device/change_form.html",
     "openwisp_luci/templates/openwisp_luci/denied.html",
+    "openwisp_luci/static/openwisp_luci/luci.js",
 ]
 
 names = set(zipfile.ZipFile(sys.argv[1]).namelist())

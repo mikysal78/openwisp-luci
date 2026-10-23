@@ -2,7 +2,7 @@
 
 🇬🇧 English · [🇮🇹 Italiano](README.it.md)
 
-A **LuCI** button on the OpenWISP device page: it opens the web interface of
+A **LuCI ↗** button in the tab bar of the OpenWISP device page: it opens the web interface of
 the router in a new tab, through an nginx proxy on the OpenWISP server. The
 router does not need to be reachable from your browser, only from the server
 (LAN, mesh, VPN, ZeroTier...).
@@ -40,7 +40,7 @@ wildcard and a certificate for `*.luci.example.com`.
 
    ```yaml
    openwisp2_extra_python_packages:
-     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.1.0/openwisp_luci-0.1.0-py3-none-any.whl"
+     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.1.1/openwisp_luci-0.1.1-py3-none-any.whl"
    # after the apps that register or extend the device admin
    # (openwisp-monitoring, openwisp-netconsole...)
    openwisp2_extra_django_apps:

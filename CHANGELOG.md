@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- The LuCI button is now in the tab bar of the device page, right after
+  "Netconsole" when present, and still opens LuCI in a new tab. Without the tab
+  bar (or without JavaScript) it stays among the object tools.
+
 ## 0.1.0
 
 First release.

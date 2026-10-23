@@ -2,7 +2,7 @@
 {% load i18n %}
 {% block object-tools-items %}
 {% if not add and luci_allowed and luci_url %}
-<li>
+<li class="luci-tool">
   {% if luci_unavailable %}
   <a class="luci-link luci-unavailable" title="{{ luci_unavailable }}" aria-disabled="true" style="opacity:.5;cursor:not-allowed">LuCI</a>
   {% else %}

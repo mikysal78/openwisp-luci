@@ -2,7 +2,7 @@
 
 [🇬🇧 English](README.md) · 🇮🇹 Italiano
 
-Un pulsante **LuCI** nella pagina del device in OpenWISP: apre l'interfaccia
+Un pulsante **LuCI ↗** nella barra delle schede della pagina del device in OpenWISP: apre l'interfaccia
 web del router in una nuova scheda, attraverso un proxy nginx sul server
 OpenWISP. Il router non deve essere raggiungibile dal tuo browser, solo dal
 server (LAN, mesh, VPN, ZeroTier...).
@@ -42,7 +42,7 @@ certificato per `*.luci.example.com`.
 
    ```yaml
    openwisp2_extra_python_packages:
-     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.1.0/openwisp_luci-0.1.0-py3-none-any.whl"
+     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.1.1/openwisp_luci-0.1.1-py3-none-any.whl"
    # dopo le app che registrano o estendono l'admin del device
    # (openwisp-monitoring, openwisp-netconsole...)
    openwisp2_extra_django_apps:

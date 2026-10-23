@@ -12,6 +12,7 @@ link monouso verso l'host del proxy di quel device.
 
 import logging
 
+from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404, HttpResponseRedirect
@@ -43,6 +44,10 @@ def _login_path():
 
 class LuciDeviceAdmin(BaseDeviceAdmin):
     change_form_template = "admin/openwisp_luci/device/change_form.html"
+
+    @property
+    def media(self):
+        return super().media + forms.Media(js=["openwisp_luci/luci.js"])
 
     def get_urls(self):
         info = self.opts.app_label, self.opts.model_name
