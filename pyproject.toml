@@ -34,6 +34,7 @@ openwisp_luci = [
     "templates/admin/openwisp_luci/device/*.html",
     "templates/openwisp_luci/*.html",
     "static/openwisp_luci/*.js",
+    "router_session.uc",
     "locale/*/LC_MESSAGES/*",
 ]
 

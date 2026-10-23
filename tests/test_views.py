@@ -14,8 +14,9 @@ HOST = PK.hex + ".luci.example.com"
 
 
 class FakeUser:
-    def __init__(self, pk=7, auth_hash="h1", allowed=True):
+    def __init__(self, pk=7, auth_hash="h1", allowed=True, superuser=False):
         self.pk, self.username, self.auth_hash, self.allowed = pk, "admin", auth_hash, allowed
+        self.is_superuser = superuser
 
     def get_session_auth_hash(self):
         return self.auth_hash
@@ -171,3 +172,36 @@ def test_denied_page(world):
     response = views.denied(rf.get("/__openwisp_luci__/denied/", HTTP_HOST=HOST, secure=True))
     assert response.status_code == 403
     assert b"LuCI" in response.content
+
+
+SID = "0123456789abcdef0123456789abcdef"
+
+
+def test_login_auto_login_superuser(world, monkeypatch):
+    users, _ = world
+    users["7"].is_superuser = True
+    calls = []
+    monkeypatch.setattr(views.autologin, "router_session", lambda device: calls.append(device) or SID)
+    response = login(token())
+    assert response.status_code == 302 and len(calls) == 1
+    morsel = response.cookies["sysauth_https"]
+    assert morsel.value == SID and morsel["path"] == "/cgi-bin/luci/"
+    assert morsel["secure"] and morsel["httponly"] and morsel["samesite"] == "Strict"
+    assert not morsel["domain"]
+
+
+def test_login_no_auto_login_for_others(world, monkeypatch):
+    calls = []
+    monkeypatch.setattr(views.autologin, "router_session", lambda device: calls.append(device) or SID)
+    response = login(token())
+    assert response.status_code == 302 and not calls
+    assert "sysauth_https" not in response.cookies
+
+
+def test_login_auto_login_failed(world, monkeypatch):
+    users, _ = world
+    users["7"].is_superuser = True
+    monkeypatch.setattr(views.autologin, "router_session", lambda device: None)
+    response = login(token())
+    assert response.status_code == 302 and "sysauth_https" not in response.cookies
+    assert access.COOKIE_NAME in response.cookies

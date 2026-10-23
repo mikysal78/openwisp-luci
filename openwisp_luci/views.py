@@ -24,7 +24,7 @@ from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
-from . import access
+from . import access, autologin
 from . import settings as app_settings
 from .permissions import Device, can_open, device_upstream
 
@@ -72,8 +72,26 @@ def login(request):
     if checked is None or not cache.add(access.nonce_key(data["n"]), 1, app_settings.TOKEN_AGE + 60):
         return _private(denied(request, status=403))
     user, device, target = checked
-    logger.info("LuCI di %s (%s) aperta da %s verso %s", device.name, device.pk, user.username, target)
     response = HttpResponseRedirect("/cgi-bin/luci/")
+    # accesso automatico solo per i superuser; gli altri usano la password
+    sid = autologin.router_session(device) if getattr(user, "is_superuser", False) else None
+    if sid:
+        response.set_cookie(
+            autologin.COOKIE_NAME,
+            sid,
+            path=autologin.COOKIE_PATH,
+            secure=True,
+            httponly=True,
+            samesite="Strict",
+        )
+    logger.info(
+        "LuCI di %s (%s) aperta da %s verso %s%s",
+        device.name,
+        device.pk,
+        user.username,
+        target,
+        " con accesso automatico come %s" % app_settings.AUTO_LOGIN_USER if sid else "",
+    )
     response.set_cookie(
         access.COOKIE_NAME,
         access.make_cookie(user.pk, data["d"], data["f"]),

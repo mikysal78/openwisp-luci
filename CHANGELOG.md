@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0
+
+- Optional automatic LuCI login for superusers (`OPENWISP_LUCI_AUTO_LOGIN`):
+  OpenWISP uses the SSH connection it already has to the router to create a
+  LuCI session for `OPENWISP_LUCI_AUTO_LOGIN_USER` (default `admin`, a
+  dedicated user: root keeps its password) with the same ACLs rpcd would give
+  that user at login, and hands it to the browser as the LuCI cookie on the router's own proxy host.
+  No router password is stored on the server, the session id never reaches
+  the OpenWISP logs. Other users, or anyone who wants to log in as another
+  router user, get the usual LuCI login page. If the session cannot be created
+  LuCI opens with its login page.
+
 ## 0.1.1
 
 - The LuCI button is now in the tab bar of the device page, right after

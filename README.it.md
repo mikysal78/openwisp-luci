@@ -44,7 +44,7 @@ certificato per `*.luci.example.com`.
 
    ```yaml
    openwisp2_extra_python_packages:
-     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.1.1/openwisp_luci-0.1.1-py3-none-any.whl"
+     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.2.0/openwisp_luci-0.2.0-py3-none-any.whl"
    # dopo le app che registrano o estendono l'admin del device
    # (openwisp-monitoring, openwisp-netconsole...)
    openwisp2_extra_django_apps:
@@ -79,9 +79,36 @@ certificato per `*.luci.example.com`.
 | `OPENWISP_LUCI_SESSION_AGE` | `14400` | Secondi di validità del cookie del proxy; poi si riusa il pulsante. |
 | `OPENWISP_LUCI_SUPERUSER_ONLY` | `False` | Solo i superuser vedono e usano il pulsante. |
 | `OPENWISP_LUCI_OPENWISP_URL` | `None` | Indirizzo di OpenWISP, per il link nella pagina «accesso negato». |
+| `OPENWISP_LUCI_AUTO_LOGIN` | `False` | Accesso automatico a LuCI per i superuser, vedi sotto. |
+| `OPENWISP_LUCI_AUTO_LOGIN_USER` | `"admin"` | Utente del router della sessione automatica (una sezione `login` di `/etc/config/rpcd`). |
+| `OPENWISP_LUCI_AUTO_LOGIN_TIMEOUT` | `10` | Secondi concessi alla connessione SSH e alla sessione. |
 
 Ogni apertura finisce nel log (logger `openwisp_luci`, livello INFO) con
 utente, device e IP del router.
+
+## Accesso automatico
+
+Con `OPENWISP_LUCI_AUTO_LOGIN = True`, un **superuser** che preme il pulsante
+entra direttamente in LuCI, già autenticato. OpenWISP apre la connessione SSH
+che usa già per i comandi (le **Credentials** del device) ed esegue sul router
+un piccolo script [ucode](openwisp_luci/router_session.uc): crea una sessione
+rpcd per `OPENWISP_LUCI_AUTO_LOGIN_USER` con le stesse ACL che rpcd darebbe a
+quell'utente al login (`/etc/config/rpcd` e `/usr/share/rpcd/acl.d`), con la
+durata delle sessioni di LuCI (`luci.sauth.sessiontime`), e ne stampa l'ID. Il
+proxy lo imposta come cookie di LuCI `sysauth_https` (`Secure`, `HttpOnly`,
+`SameSite=Strict`, path `/cgi-bin/luci/`) solo sull'host di quel router.
+
+- Nessuna password del router sul server: chi controlla OpenWISP può già
+  eseguire comandi sui router con la stessa connessione SSH.
+- L'ID della sessione è una credenziale: il comando passa direttamente dal
+  canale paramiko, non da `exec_command` di openwisp-controller, che scrive
+  l'output nel log.
+- Solo i superuser: gli altri utenti vedono la pagina di login di LuCI. Usa un
+  utente dedicato del router (es. `admin`), così root continua a entrare con
+  la sua password.
+- Ogni clic crea una sessione nuova; il logout di LuCI la distrugge, altrimenti
+  scade dopo la durata di inattività delle sessioni di LuCI.
+- Se il router non è raggiungibile in SSH, LuCI si apre con la pagina di login.
 
 ## Sicurezza
 

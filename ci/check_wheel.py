@@ -11,6 +11,7 @@ REQUIRED = [
     "openwisp_luci/templates/admin/openwisp_luci/device/change_form.html",
     "openwisp_luci/templates/openwisp_luci/denied.html",
     "openwisp_luci/static/openwisp_luci/luci.js",
+    "openwisp_luci/router_session.uc",
 ]
 
 names = set(zipfile.ZipFile(sys.argv[1]).namelist())

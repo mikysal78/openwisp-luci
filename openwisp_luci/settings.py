@@ -23,3 +23,13 @@ SUPERUSER_ONLY = getattr(settings, "OPENWISP_LUCI_SUPERUSER_ONLY", False)
 # Indirizzo di OpenWISP (es. "https://openwisp.example.com") per il link nella
 # pagina di accesso negato; None = nessun link
 OPENWISP_URL = getattr(settings, "OPENWISP_LUCI_OPENWISP_URL", None)
+# Accesso automatico a LuCI per i superuser: OpenWISP entra nel router con la
+# sua connessione SSH (Credentials del device), crea una sessione LuCI per
+# AUTO_LOGIN_USER con i permessi che rpcd gli darebbe al login e la passa al
+# browser come cookie sysauth_https, solo sull'host di quel router. Gli altri
+# utenti, e chi vuole entrare come un altro utente (es. root), usano la
+# password nella pagina di login di LuCI.
+AUTO_LOGIN = getattr(settings, "OPENWISP_LUCI_AUTO_LOGIN", False)
+AUTO_LOGIN_USER = getattr(settings, "OPENWISP_LUCI_AUTO_LOGIN_USER", "admin")
+# Secondi massimi per la connessione SSH e la creazione della sessione
+AUTO_LOGIN_TIMEOUT = getattr(settings, "OPENWISP_LUCI_AUTO_LOGIN_TIMEOUT", 10)
