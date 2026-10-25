@@ -7,6 +7,8 @@ REQUIRED = [
     "openwisp_luci/admin.py",
     "openwisp_luci/views.py",
     "openwisp_luci/urls.py",
+    "openwisp_luci/api.py",
+    "openwisp_luci/api_urls.py",
     "openwisp_luci/locale/it/LC_MESSAGES/django.mo",
     "openwisp_luci/templates/admin/openwisp_luci/device/change_form.html",
     "openwisp_luci/templates/openwisp_luci/denied.html",

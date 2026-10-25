@@ -18,12 +18,13 @@
   vars:
     luci_proxy_domain: luci.example.com
     openwisp2_extra_python_packages:
-      - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.2.0/openwisp_luci-0.2.0-py3-none-any.whl"
+      - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.3.0/openwisp_luci-0.3.0-py3-none-any.whl"
     # after the apps that register or extend the device admin
     openwisp2_extra_django_apps:
       - openwisp_luci
     openwisp2_extra_urls:
       - 'path("__openwisp_luci__/", include("openwisp_luci.urls"))'
+      - 'path("api/v1/", include("openwisp_luci.api_urls"))'
     openwisp2_extra_django_settings_instructions:
       - |
         OPENWISP_LUCI_HOST = "{id}.luci.example.com"

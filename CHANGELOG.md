@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+- API for apps: `POST /api/v1/luci/device/<uuid>/link/` with the OpenWISP
+  token (`Authorization: Bearer <token>`) returns the same single-use link as
+  the button, after the same checks. Used by
+  [openwisp-android](https://github.com/mikysal78/openwisp-android) to open
+  LuCI from the phone. Include `openwisp_luci.api_urls` under `api/v1/` to
+  enable it. Only the Bearer token is accepted (never the browser session), and
+  a device the user cannot open answers 404 like a missing one.
+
 ## 0.2.0
 
 - Optional automatic LuCI login for superusers (`OPENWISP_LUCI_AUTO_LOGIN`):

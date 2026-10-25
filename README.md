@@ -42,13 +42,14 @@ wildcard and a certificate for `*.luci.example.com`.
 
    ```yaml
    openwisp2_extra_python_packages:
-     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.2.0/openwisp_luci-0.2.0-py3-none-any.whl"
+     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.3.0/openwisp_luci-0.3.0-py3-none-any.whl"
    # after the apps that register or extend the device admin
    # (openwisp-monitoring, openwisp-netconsole...)
    openwisp2_extra_django_apps:
      - openwisp_luci
    openwisp2_extra_urls:
      - 'path("__openwisp_luci__/", include("openwisp_luci.urls"))'
+     - 'path("api/v1/", include("openwisp_luci.api_urls"))'
    openwisp2_extra_django_settings_instructions:
      - |
        OPENWISP_LUCI_HOST = "{id}.luci.example.com"
@@ -105,6 +106,25 @@ sets it as the LuCI cookie `sysauth_https` (`Secure`, `HttpOnly`,
 - Every press creates a new session; LuCI logout destroys it, otherwise it
   expires after the LuCI session time of inactivity.
 - If the router cannot be reached over SSH, LuCI opens with its login page.
+
+## API for apps
+
+Apps such as [openwisp-android](https://github.com/mikysal78/openwisp-android)
+open LuCI with the OpenWISP API token of the user:
+
+```
+POST /api/v1/luci/device/<device uuid>/link/
+Authorization: Bearer <token from /api/v1/users/token/>
+
+200 {"url": "https://<device host>/__openwisp_luci__/login/?token=..."}
+```
+
+The app opens the URL in the browser, which then works as with the button.
+The checks are the same as for the button; the API accepts only the Bearer
+token, never the browser session. Answers: `401` missing or invalid token,
+`404` device missing or not allowed (the two are not distinguished), `409`
+management IP missing or not allowed. Without the `api_urls` include the API
+does not exist.
 
 ## Security
 

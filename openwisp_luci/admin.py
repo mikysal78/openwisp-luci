@@ -16,12 +16,13 @@ from django import forms
 from django.contrib import admin, messages
 from django.core.exceptions import ImproperlyConfigured
 from django.http import Http404, HttpResponseRedirect
-from django.urls import NoReverseMatch, path, reverse
+from django.urls import path, reverse
 from django.utils.http import urlencode
 from django.utils.translation import gettext as _
 
 from . import access
 from . import settings as app_settings
+from .api import login_path
 from .permissions import Device, can_open, device_upstream
 
 logger = logging.getLogger(__name__)
@@ -33,13 +34,6 @@ except KeyError as e:
         "openwisp_luci va messo in INSTALLED_APPS dopo openwisp_controller.config "
         "(e dopo openwisp_monitoring.device e openwisp_netconsole, se presenti)"
     ) from e
-
-
-def _login_path():
-    try:
-        return reverse("openwisp_luci:login")
-    except NoReverseMatch:
-        return "/__openwisp_luci__/login/"
 
 
 class LuciDeviceAdmin(BaseDeviceAdmin):
@@ -93,9 +87,7 @@ class LuciDeviceAdmin(BaseDeviceAdmin):
         token = access.make_token(request.user.pk, device.pk, access.user_fingerprint(request.user))
         host = access.device_host(app_settings.HOST, device.pk)
         logger.info("link LuCI per %s (%s) dato a %s", device.name, device.pk, request.user.username)
-        response = HttpResponseRedirect(
-            "https://%s%s?%s" % (host, _login_path(), urlencode({"token": token}))
-        )
+        response = HttpResponseRedirect("https://%s%s?%s" % (host, login_path(), urlencode({"token": token})))
         response["Cache-Control"] = "no-store"
         response["Referrer-Policy"] = "no-referrer"
         return response
