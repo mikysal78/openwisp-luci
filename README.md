@@ -2,6 +2,8 @@
 
 🇬🇧 English · [🇮🇹 Italiano](README.it.md)
 
+> 📖 This repository is part of the **NINUX Basilicata** infrastructure: the step-by-step guide to rebuild all of it (Proxmox, DNS, OpenWISP, modules, firmware, app) is at **[docs.ninux-nnxx.it](https://docs.ninux-nnxx.it/en/)**.
+
 A **LuCI ↗** button in the tab bar of the OpenWISP device page: it opens the web interface of
 the router in a new tab, through an nginx proxy on the OpenWISP server. The
 router does not need to be reachable from your browser, only from the server
