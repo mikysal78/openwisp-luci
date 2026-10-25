@@ -2,7 +2,7 @@
 
 [🇬🇧 English](README.md) · 🇮🇹 Italiano
 
-> 📖 Questo repository fa parte dell'infrastruttura di **NINUX Basilicata**: la guida per ricostruirla tutta, passo passo (Proxmox, DNS, OpenWISP, moduli, firmware, app), è su **[docs.ninux-nnxx.it](https://docs.ninux-nnxx.it)**.
+> 📖 Questo repository fa parte dell'infrastruttura di **NINUX Basilicata**: la guida per ricostruirla tutta, passo passo (Proxmox, DNS, OpenWISP, moduli, firmware, app), è su **[la guida su GitHub Pages](https://mikysal78.github.io/ninux-basilicata-infra/)**.
 
 Un pulsante **LuCI ↗** nella barra delle schede della pagina del device in OpenWISP: apre l'interfaccia
 web del router in una nuova scheda, attraverso un proxy nginx sul server
