@@ -90,7 +90,9 @@ def auth(cookie, host=HOST, method="get"):
 
 def test_login_sets_cookie(world):
     response = login(token())
-    assert response.status_code == 302 and response["Location"] == "/cgi-bin/luci/"
+    # pagina con meta refresh, non 302: vedi ENTER_LUCI
+    assert response.status_code == 200 and b'content="0;url=/cgi-bin/luci/"' in response.content
+    assert response["Content-Security-Policy"] == "default-src 'none'"
     morsel = response.cookies[access.COOKIE_NAME]
     assert morsel["secure"] and morsel["httponly"] and morsel["samesite"] == "Strict"
     assert morsel["path"] == "/" and not morsel["domain"]
@@ -100,7 +102,7 @@ def test_login_sets_cookie(world):
 
 def test_login_single_use(world):
     tok = token()
-    assert login(tok).status_code == 302
+    assert login(tok).status_code == 200
     assert login(tok).status_code == 403
 
 
@@ -112,7 +114,7 @@ def test_login_wrong_host(world):
 def test_login_wrong_host_does_not_burn_token(world):
     tok = token()
     assert login(tok, host="openwisp.example.com").status_code == 403
-    assert login(tok).status_code == 302
+    assert login(tok).status_code == 200
 
 
 @pytest.mark.parametrize("tok", ["", "junk", access.make_cookie(7, PK.hex, "x")])
@@ -183,7 +185,7 @@ def test_login_auto_login_superuser(world, monkeypatch):
     calls = []
     monkeypatch.setattr(views.autologin, "router_session", lambda device: calls.append(device) or SID)
     response = login(token())
-    assert response.status_code == 302 and len(calls) == 1
+    assert response.status_code == 200 and len(calls) == 1
     morsel = response.cookies["sysauth_https"]
     assert morsel.value == SID and morsel["path"] == "/cgi-bin/luci/"
     assert morsel["secure"] and morsel["httponly"] and morsel["samesite"] == "Strict"
@@ -194,7 +196,7 @@ def test_login_no_auto_login_for_others(world, monkeypatch):
     calls = []
     monkeypatch.setattr(views.autologin, "router_session", lambda device: calls.append(device) or SID)
     response = login(token())
-    assert response.status_code == 302 and not calls
+    assert response.status_code == 200 and not calls
     assert "sysauth_https" not in response.cookies
 
 
@@ -203,5 +205,5 @@ def test_login_auto_login_failed(world, monkeypatch):
     users["7"].is_superuser = True
     monkeypatch.setattr(views.autologin, "router_session", lambda device: None)
     response = login(token())
-    assert response.status_code == 302 and "sysauth_https" not in response.cookies
+    assert response.status_code == 200 and "sysauth_https" not in response.cookies
     assert access.COOKIE_NAME in response.cookies

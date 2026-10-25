@@ -44,7 +44,7 @@ certificato per `*.luci.example.com`.
 
    ```yaml
    openwisp2_extra_python_packages:
-     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.3.0/openwisp_luci-0.3.0-py3-none-any.whl"
+     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.3.1/openwisp_luci-0.3.1-py3-none-any.whl"
    # dopo le app che registrano o estendono l'admin del device
    # (openwisp-monitoring, openwisp-netconsole...)
    openwisp2_extra_django_apps:

@@ -42,7 +42,7 @@ wildcard and a certificate for `*.luci.example.com`.
 
    ```yaml
    openwisp2_extra_python_packages:
-     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.3.0/openwisp_luci-0.3.0-py3-none-any.whl"
+     - "openwisp-luci @ https://github.com/mikysal78/openwisp-luci/releases/download/v0.3.1/openwisp_luci-0.3.1-py3-none-any.whl"
    # after the apps that register or extend the device admin
    # (openwisp-monitoring, openwisp-netconsole...)
    openwisp2_extra_django_apps:

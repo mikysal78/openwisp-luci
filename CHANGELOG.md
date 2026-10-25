@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.1
+
+- After the single-use login the proxy enters LuCI with a page that refreshes
+  to `/cgi-bin/luci/` instead of an HTTP redirect. When the link comes from
+  outside the site (an app, a chat), browsers treat the redirect as cross-site
+  and do not send the `SameSite=Strict` cookies just set, so LuCI showed
+  "session missing or expired". From the OpenWISP button it already worked.
+
 ## 0.3.0
 
 - API for apps: `POST /api/v1/luci/device/<uuid>/link/` with the OpenWISP

@@ -15,7 +15,7 @@ import uuid
 
 from django.contrib.auth import get_user_model
 from django.core.cache import cache
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse
 from django.http.request import split_domain_port
 from django.shortcuts import render
 from django.urls import reverse
@@ -57,6 +57,20 @@ def _check(request, data):
     return user, device, target
 
 
+# Pagina che entra in LuCI dopo il login. Non un redirect 302: quando il link
+# arriva da fuori (un'app, un altro sito) il browser considera cross-site anche
+# il redirect e non manda i cookie SameSite=Strict appena impostati, quindi
+# LuCI aprirebbe "sessione assente". Il meta refresh e' una navigazione che
+# parte da questa pagina, sullo stesso host: i cookie Strict arrivano.
+ENTER_LUCI = (
+    '<!doctype html><html><head><meta charset="utf-8">'
+    '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    '<meta http-equiv="refresh" content="0;url=/cgi-bin/luci/">'
+    "<title>LuCI</title></head>"
+    '<body><p><a href="/cgi-bin/luci/">LuCI</a></p></body></html>'
+)
+
+
 def _private(response):
     response["Cache-Control"] = "no-store"
     response["Referrer-Policy"] = "no-referrer"
@@ -72,7 +86,8 @@ def login(request):
     if checked is None or not cache.add(access.nonce_key(data["n"]), 1, app_settings.TOKEN_AGE + 60):
         return _private(denied(request, status=403))
     user, device, target = checked
-    response = HttpResponseRedirect("/cgi-bin/luci/")
+    response = HttpResponse(ENTER_LUCI)
+    response["Content-Security-Policy"] = "default-src 'none'"
     # accesso automatico solo per i superuser; gli altri usano la password
     sid = autologin.router_session(device) if getattr(user, "is_superuser", False) else None
     if sid:
